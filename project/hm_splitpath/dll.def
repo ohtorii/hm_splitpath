@@ -1,0 +1,5 @@
+EXPORTS
+    EnumHidemaruFilter
+    HidemaruFilterGetVersion
+    hm_splitpath
+

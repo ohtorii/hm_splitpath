@@ -1,0 +1,22 @@
+﻿/* パス名をタブ区切りに分解する
+
+c:\foo\bar\spam.txt -> c:	\foo\bar\	spam	.txt
+*/
+call main;
+endmacro;
+
+main:
+	call initialize;
+
+	gofiletop;
+	##current_lineno=lineno;
+	gofileend;
+	##end_lineno=lineno;
+
+	while(##current_lineno <= ##end_lineno){
+		golinetop2;
+		##current_lineno = ##current_lineno + 1;
+	}
+	return ;
+
+initialize:
