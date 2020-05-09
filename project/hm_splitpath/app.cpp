@@ -28,7 +28,7 @@ static HGLOBAL AllocMemSub(SIZE_T size_byte, HWND hwndParent) {
 		return mem;
 	}
 	TCHAR	sz[256];	
-	wsprintf(sz, TEXT("HmfSort.hmf: Not enough memory, size=%u error-code=%u"), size_byte, GetLastError());
+	wsprintf(sz, TEXT("HmfSort.hmf: Not enough memory, size=%zu error-code=%u"), size_byte, GetLastError());
 	MessageBox(hwndParent, sz, NULL, MB_ICONHAND | MB_OK);
 	return NULL;	
 }
@@ -40,8 +40,6 @@ static void Splitpath(std::wstring &result_string, WCHAR* pwszIn) {
 	wchar_t dir[_MAX_DIR];
 	wchar_t fname[_MAX_FNAME];
 	wchar_t ext[_MAX_EXT];
-
-
 	while (std::getline(stream, line)) {
 		if (line.size() == 0) {
 			result_string.append(L"\n");
@@ -73,7 +71,7 @@ static void Splitpath(std::wstring &result_string, WCHAR* pwszIn) {
 	}
 }
 
-extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* pszParam, int cbParamBuffer) {
+extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* /*pszParam*/, int /*cbParamBuffer*/) {
 	std::wstring result_string;
 
 	Splitpath(result_string, pwszIn);
@@ -83,16 +81,27 @@ extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* p
 
 	auto result_byte_size = result_string.size() * sizeof(*result_string.c_str());
 	auto mem = AllocMemSub(result_byte_size,hwndHidemaru);
-	if (mem) {
+	if (!mem) {
+		return NULL;
+	}
+
+	errno_t err = -1;
+	{
 		auto dst = (WCHAR*)GlobalLock(mem);
 		if (dst) {
-			auto err = memcpy_s(dst, GlobalSize(mem), result_string.c_str(), result_byte_size);
-			if (err == 0) {
-				return mem;
-			}
+			err = memcpy_s(	dst, GlobalSize(mem), result_string.c_str(), result_byte_size);
+			GlobalUnlock(mem);
+			dst = NULL;
 		}
 	}
-	
+	if (err == 0) {
+		//success
+		return mem;
+	}
+		
+	//error
 	GlobalFree(mem);
+	mem = NULL;
+
 	return NULL;
 }
