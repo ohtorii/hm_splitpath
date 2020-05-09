@@ -71,6 +71,26 @@ static void Splitpath(std::wstring &result_string, WCHAR* pwszIn) {
 	}
 }
 
+static bool CopyString(HGLOBAL mem, const std::wstring &src) {
+	errno_t err = -1;
+	{
+		auto dst = (WCHAR*)GlobalLock(mem);
+		if (dst) {
+			err = memcpy_s(	dst, 
+							GlobalSize(mem), 
+							src.c_str(), 
+							src.size()*sizeof(src.c_str()[0]));
+			dst[src.size()]=L'\0';
+			GlobalUnlock(mem);
+			dst = NULL;
+		}
+	}
+	if (err == 0) {
+		return true;
+	}
+	return false;
+}
+
 extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* /*pszParam*/, int /*cbParamBuffer*/) {
 	std::wstring result_string;
 
@@ -79,26 +99,20 @@ extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* /
 		return NULL;
 	}
 
-	auto result_byte_size = result_string.size() * sizeof(*result_string.c_str());
-	auto mem = AllocMemSub(result_byte_size,hwndHidemaru);
-	if (!mem) {
-		return NULL;
-	}
-
-	errno_t err = -1;
+	HGLOBAL mem = NULL;
 	{
-		auto dst = (WCHAR*)GlobalLock(mem);
-		if (dst) {
-			err = memcpy_s(	dst, GlobalSize(mem), result_string.c_str(), result_byte_size);
-			GlobalUnlock(mem);
-			dst = NULL;
+		const auto terminate_size   = sizeof(std::wstring::value_type);
+		const auto result_byte_size = result_string.size() * sizeof(*result_string.c_str()) + terminate_size;
+		mem = AllocMemSub(result_byte_size, hwndHidemaru);
+		if (!mem) {
+			return NULL;
 		}
 	}
-	if (err == 0) {
+
+	if (CopyString(mem,result_string)) {
 		//success
 		return mem;
 	}
-		
 	//error
 	GlobalFree(mem);
 	mem = NULL;
