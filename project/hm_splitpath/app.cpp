@@ -92,13 +92,15 @@ static bool CopyString(HGLOBAL mem, const std::wstring &src) {
 }
 
 extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* /*pszParam*/, int /*cbParamBuffer*/) {
+	//OutputDebugString(L"Start");
+
 	std::wstring result_string;
 
 	Splitpath(result_string, pwszIn);
 	if (result_string.size() == 0) {
 		return NULL;
 	}
-
+	//OutputDebugString(L"Splitpath");
 	HGLOBAL mem = NULL;
 	{
 		const auto terminate_size   = sizeof(std::wstring::value_type);
@@ -108,12 +110,15 @@ extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* /
 			return NULL;
 		}
 	}
+	//OutputDebugString(L"AllocMemSub");
 
 	if (CopyString(mem,result_string)) {
 		//success
+		//OutputDebugString(L"end - CopyString[Success]");
 		return mem;
-	}
+	}	
 	//error
+	//OutputDebugString(L"end - CopyString[Error]");
 	GlobalFree(mem);
 	mem = NULL;
 
