@@ -1,7 +1,9 @@
-# 作成中です
-
-
 # hm_splitpath
+
+![GitHub release](https://img.shields.io/github/release/ohtorii/hm_splitpath.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Maintenance](https://img.shields.io/maintenance/yes/2020.svg)
+
 
 ```ファイルパス分解```拡張は、ファイルパスを4要素（※）に分解します。
 
@@ -36,7 +38,7 @@ C,Dドライブ混在のファイルリストをドライブ名でソートす�
 
 # 導入方法
 
-度自分の環境にあった拡張を、秀丸エディタのフィルターフォルダへコピーしてください。
+ご自分の環境に合わせて秀丸エディタのフィルターフォルダへコピーしてください。
 
 |環境|拡張のファイル名|
 |:--:|:--:|
@@ -45,10 +47,11 @@ C,Dドライブ混在のファイルリストをドライブ名でソートす�
 
 ![setting](images/setting.png "setting")
 
-# 動作を確認した環境
+# 動作確認した環境
 
 - Windows10 64bit
-- 秀丸エディタ 64bit 8.92
+- 秀丸エディタ 64bit 8.92 β16
+- 秀丸エディタ 32bit 8.91
 
 # ビルド方法
 
@@ -69,4 +72,4 @@ Intel Core i7-9700@3.00GH
 
 - <https://ohtorii.hatenadiary.jp>
 - <https://twitter.com/ohtorii>
-- <https://github.com/ohtorii>
+- <https://github.com/ohtorii/hm_splitpath>
