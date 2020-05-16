@@ -4,9 +4,9 @@ hm_splitpath拡張のビルド方法です。
 
 # 前準備
 
-1st-partyフォルダに `HmFilter.h` をコピーしてください。
+[秀丸エディタのホームページ](https://hide.maruo.co.jp/index.html)から`HmFilter.h`をダウンロードします。
 
-HmFilter.hは[秀丸エディタのホームページ](https://hide.maruo.co.jp/index.html)から取得してください、
+`HmFilter.h` を1st-partyフォルダにコピーします。
 
 
 コピー後のフォルダ構成
