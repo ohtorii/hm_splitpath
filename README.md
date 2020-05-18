@@ -4,8 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Maintenance](https://img.shields.io/maintenance/yes/2020.svg)
 
+# はじめに
 
-```ファイルパス分解```拡張は、ファイルパスを4要素（※）に分解します。
+これは、ファイルパスを4要素（※）に分解する[秀丸エディタ](https://hide.maruo.co.jp)の変換モジュールです。
 
 （※）4要素
 
