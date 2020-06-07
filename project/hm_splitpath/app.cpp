@@ -2,10 +2,17 @@
 
 /* ドライブ・ディレクトリ・ファイル名・拡張子の間に入る文字。
 */
-#define SEPARATOR  L"\t"
+#define SEPARATOR		L"\t"
+#define SEPARATOR_CHAR  L'\t'
+
+//error C4996 : 'wcscpy' : This function or variable may be unsafe.Consider using wcscpy_s instead.To disable deprecation, use _CRT_SECURE_NO_WARNINGS.See online help for details.
+#define DISABLE_C4996   __pragma(warning(push)) __pragma(warning(disable:4996))
+#define ENABLE_C4996    __pragma(warning(pop))
 
 
-struct HIDEMARUFILTERINFO aFilterInfo[] = {
+
+
+static struct HIDEMARUFILTERINFO aFilterInfo[] = {
 	{ sizeof(HIDEMARUFILTERINFO), "hm_splitpath", "ファイルパス分解", "Split file path.", 'S', 1, 0, FILTERFLAG_RETURN_LFONLY },
 	{ 0, NULL, NULL, NULL, NULL, 0, 0, 0 }
 };
@@ -33,94 +40,141 @@ static HGLOBAL AllocMemSub(SIZE_T size_byte, HWND hwndParent) {
 	return NULL;	
 }
 
-static void Splitpath(std::wstring &result_string, WCHAR* pwszIn) {
-	std::wistringstream stream(pwszIn);
-	std::wstring		line;
+static inline size_t CopyString(wchar_t * __restrict  dst, const wchar_t * __restrict  src) {
+	size_t length = 0;
+	while ((*src) != L'\0') {
+		*dst = *src;
+
+		++dst;
+		++src;
+		++length;
+	}
+	return length;
+}
+
+static size_t Pass1(std::vector<WCHAR*>	&line_tops, WCHAR* pwszInOut) {
+	size_t	result_char_count = 0;
+
+	{
+		bool	finish = false;
+		auto	current = pwszInOut;
+		while (!finish) {
+			auto next = wcschr(current, L'\n');
+			if (next == nullptr) {
+				//最終行
+				const auto len = wcslen(current);
+				next = current + len;
+				result_char_count += len;
+				finish = true;
+			}
+			else {
+				result_char_count += next - current;
+			}
+
+			//(memo)	SEPARATOR x 3
+			//			'\n'      x 1
+			result_char_count += 4;
+
+			//'\n' -> '\0'
+			next[0] = L'\0';
+
+			if (next[1] == L'\0') {
+				finish = true;
+			}
+
+			line_tops.push_back(current);
+			current = next + 1;
+		}
+	}
+
+	return result_char_count;
+}
+
+static void Pass2(WCHAR* dst, const std::vector<WCHAR*>&line_tops) {	
 	wchar_t drive[_MAX_DRIVE];
 	wchar_t dir[_MAX_DIR];
 	wchar_t fname[_MAX_FNAME];
 	wchar_t ext[_MAX_EXT];
-	while (std::getline(stream, line)) {
-		if (line.size() == 0) {
-			result_string.append(L"\n");
-			continue;
-		}
 
+	for (auto ptr : line_tops) {
 		auto err = _wsplitpath_s(
-			line.c_str(),
-			drive, _countof(drive),
-			dir, _countof(dir),
-			fname, _countof(fname),
-			ext, _countof(ext));
+						ptr,
+						drive,	_countof(drive),
+						dir,	_countof(dir),
+						fname,	_countof(fname),
+						ext,	_countof(ext));
+
+DISABLE_C4996
+
 		if (err == 0) {
 			//success
-			result_string.append(drive);
-			result_string.append(SEPARATOR);
-			result_string.append(dir);
-			result_string.append(SEPARATOR);
-			result_string.append(fname);
-			result_string.append(SEPARATOR);
-			result_string.append(ext);
-			result_string.append(L"\n");
+			const auto drive_len = CopyString(dst, drive);
+			dst += drive_len;
+
+			*dst = SEPARATOR_CHAR;
+			++dst;
+
+			const auto dir_len = CopyString(dst, dir);
+			dst += dir_len;
+
+			*dst = SEPARATOR_CHAR;
+			++dst;
+
+			const auto fname_len = CopyString(dst, fname);
+			dst += fname_len;
+
+			*dst = SEPARATOR_CHAR;
+			++dst;
+
+			const auto ext_len = CopyString(dst, ext);
+			dst += ext_len;
+
+			*dst = L'\n';
+			++dst;
 		}
 		else {
 			//error
-			result_string.append(line);
-			result_string.append(L"\n");
-		}
-	}
-}
+			const auto ptr_len = CopyString(dst, ptr);
+			dst += ptr_len;
 
-static bool CopyString(HGLOBAL mem, const std::wstring &src) {
-	errno_t err = -1;
-	{
-		auto dst = (WCHAR*)GlobalLock(mem);
-		if (dst) {
-			err = memcpy_s(	dst, 
-							GlobalSize(mem), 
-							src.c_str(), 
-							src.size()*sizeof(src.c_str()[0]));
-			dst[src.size()]=L'\0';
-			GlobalUnlock(mem);
-			dst = NULL;
+			*dst = L'\n';
+			++dst;
 		}
+
+ENABLE_C4996
+
 	}
-	if (err == 0) {
-		return true;
-	}
-	return false;
+
+	*dst = L'\0';
 }
 
 extern "C" HGLOBAL _cdecl hm_splitpath(HWND hwndHidemaru, WCHAR* pwszIn, char* /*pszParam*/, int /*cbParamBuffer*/) {
-	//OutputDebugString(L"Start");
+	HGLOBAL memory_handle = NULL;
 
-	std::wstring result_string;
-
-	Splitpath(result_string, pwszIn);
-	if (result_string.size() == 0) {
-		return NULL;
-	}
-	//OutputDebugString(L"Splitpath");
-	HGLOBAL mem = NULL;
 	{
-		const auto terminate_size   = sizeof(std::wstring::value_type);
-		const auto result_byte_size = result_string.size() * sizeof(*result_string.c_str()) + terminate_size;
-		mem = AllocMemSub(result_byte_size, hwndHidemaru);
-		if (!mem) {
-			return NULL;
+		std::vector<WCHAR*>	line_tops;
+		line_tops.reserve(1024 * 1024);
+
+		{
+			const size_t result_char_count = Pass1(line_tops, pwszIn);
+			//(memo) +1 == '\0'のぶん。
+			memory_handle = AllocMemSub((result_char_count + 1) * sizeof(WCHAR), hwndHidemaru);
+			if (memory_handle == NULL) {
+				return NULL;
+			}
 		}
+
+		{
+			auto dst = (WCHAR*)GlobalLock(memory_handle);
+			if (dst == NULL) {
+				GlobalFree(memory_handle);
+				return NULL;
+			}
+
+			Pass2(dst, line_tops);
+		}
+
+		GlobalUnlock(memory_handle);
 	}
-	//OutputDebugString(L"AllocMemSub");
-
-	if (CopyString(mem,result_string)) {
-		//success
-		//OutputDebugString(L"end - CopyString[Success]");
-		return mem;
-	}	
-	//error
-	//OutputDebugString(L"end - CopyString[Error]");
-	GlobalFree(mem);
-	mem = NULL;
-
-	return NULL;
+	return memory_handle;
 }

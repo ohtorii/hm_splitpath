@@ -11,7 +11,10 @@
 #include <sstream>
 #include <iostream>
 #include <string>
+#include <vector>
+#include <wchar.h>
 #include "framework.h"
 #include "HmFilter.h"
+#include "hm_splitpath.h"
 
 #endif //PCH_H
