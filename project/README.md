@@ -1,6 +1,6 @@
 ﻿# はじめに
 
-hm_splitpath拡張のビルド方法です。
+hm_splitpath拡張をVisualStudioでビルドする方法です。
 
 # 前準備
 
@@ -22,6 +22,10 @@ hm_splitpath拡張のビルド方法です。
 hm_splitpath拡張(DLL)は以下ディレクトリへ出力されます。
 
 	project\hm_splitpath\dll
+
+# VisualStudioのバージョン
+
+VisualStudio 2019でビルドできることを確認しています。
 
 
 以上です
