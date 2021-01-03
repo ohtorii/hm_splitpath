@@ -352,3 +352,6 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 project/1st-party/HmFilter.h
+project/hm_splitpath-2017.sln
+project/coverity/ohtorii_tools.tgz
+project/hm_splitpath/hm_splitpath-2017.vcxproj
