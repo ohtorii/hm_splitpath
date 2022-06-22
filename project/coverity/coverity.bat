@@ -5,13 +5,13 @@ REM
 
 setlocal
 
-set COV_BUILD=C:\cov-analysis-win64-2019.03\bin\cov-build.exe
+set COV_BUILD=C:\cov-analysis-win64-2021.12.1\bin\cov-build.exe
 
 REM フォルダ名は変えないこと(Coverityのマニュアルに説明あり)
 set COV_DIR=cov-int
 set CURRENT=%~dp0
-REM (Memo)VS2019だとcob-buildでエラー発生、VS2017を利用中。
-set SOLUTION=%CURRENT%\..\hm_splitpath-2017.sln
+
+set SOLUTION=%CURRENT%\..\hm_splitpath.sln
 set BUILD_COMMAND=msbuild %SOLUTION% /t:clean;rebuild /p:Configuration=Release;Platform=x64;PostBuildEventUseInBuild=false
 
 if not exist %COV_BUILD% (
@@ -31,8 +31,7 @@ popd
 exit /b %RESULT%
 
 :Main
-	call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat"
-	REM call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
+	call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"
 	if %errorlevel% neq 0 (
 		echo VsDevCmd.batの実行に失敗しました
 	)
