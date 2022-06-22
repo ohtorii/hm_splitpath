@@ -3,6 +3,7 @@
 ![GitHub release](https://img.shields.io/github/release/ohtorii/hm_splitpath.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Maintenance](https://img.shields.io/maintenance/yes/2025.svg)
+![Coverity Scan Build Status](https://img.shields.io/coverity/scan/22395.svg "Coverity Scan Build Status")
 
 # はじめに
 
